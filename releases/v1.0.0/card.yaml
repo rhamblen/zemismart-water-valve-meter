@@ -1,0 +1,109 @@
+# Garden Water Meter Card — v1.0.0
+# Repository: https://github.com/rhamblen/zemismart-water-valve-meter
+# Requires: custom:html-template-card (HACS)
+#
+# ENTITY PREFIX: This card uses the prefix "garden_water_meter".
+# If your device uses a different prefix, find-and-replace "garden_water_meter"
+# with your actual prefix throughout the content string below.
+#
+# Place this inside a dashboard section. The grid wrapper and heading are included.
+
+type: grid
+background:
+  color: lightgray
+  opacity: 50
+cards:
+  - type: heading
+    heading: Water Meter
+  - type: custom:html-template-card
+    ignore_line_breaks: true
+    content: >-
+      {% set flow=states('sensor.garden_water_meter_flow_rate')|float(0) %}
+      {% set flow_raw=states('sensor.garden_water_meter_flow_rate') %}
+      {% set flow_unit=state_attr('sensor.garden_water_meter_flow_rate','unit_of_measurement')|default('L/min',true) %}
+      {% set temp=states('sensor.garden_water_meter_temperature')|float(0) %}
+      {% set temp_raw=states('sensor.garden_water_meter_temperature') %}
+      {% set temp_unit=state_attr('sensor.garden_water_meter_temperature','unit_of_measurement')|default('°C',true) %}
+      {% set valve=states('switch.garden_water_meter') %}
+      {% set daily=states('sensor.garden_water_meter_daily_consumption') %}
+      {% set daily_unit=state_attr('sensor.garden_water_meter_daily_consumption','unit_of_measurement')|default('L',true) %}
+      {% set monthly=states('sensor.garden_water_meter_month_consumption') %}
+      {% set monthly_unit=state_attr('sensor.garden_water_meter_month_consumption','unit_of_measurement')|default('L',true) %}
+      {% set total=states('sensor.garden_water_meter_water_consumed') %}
+      {% set total_unit=state_attr('sensor.garden_water_meter_water_consumed','unit_of_measurement')|default('m³',true) %}
+      {% set faults=states('sensor.garden_water_meter_faults') %}
+      {% set has_faults=faults not in ['none','None','unknown','unavailable',''] %}
+      {% set is_flowing=flow>0 %}
+      {% set ice_warning=temp<=4.0 and temp_raw not in ['unknown','unavailable'] %}
+      {% set valve_open=valve=='on' %}
+      <style>
+      .wm{padding:12px;font-family:var(--primary-font-family);color:var(--primary-text-color)}
+      .wm-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+      .wm-ttl{font-size:.85em;font-weight:600;color:var(--secondary-text-color);letter-spacing:.05em;text-transform:uppercase}
+      .wm-warn{cursor:pointer;font-size:1.4em;line-height:1;transition:all .3s}
+      .wm-won{color:#ff9800;filter:drop-shadow(0 0 5px #ff9800)}
+      .wm-woff{color:#444}
+      .wm-bdg{display:flex;justify-content:space-between;margin-bottom:14px;gap:8px}
+      .wm-b{padding:4px 10px;border-radius:20px;font-size:.75em;font-weight:700;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+      .wm-ice{background:rgba(33,150,243,.15);color:#64b5f6;border-color:#1565c0;animation:wm-ic 2s infinite}
+      .wm-tnorm{background:rgba(120,120,120,.15);color:#aaa;border-color:rgba(120,120,120,.3)}
+      .wm-vopen{background:rgba(76,175,80,.15);color:#81c784;border-color:#388e3c}
+      .wm-vclosed{background:rgba(244,67,54,.15);color:#e57373;border-color:#c62828}
+      @keyframes wm-ic{0%,100%{box-shadow:0 0 6px rgba(33,150,243,.4)}50%{box-shadow:0 0 14px rgba(33,150,243,.8)}}
+      @keyframes wm-fl{0%,100%{box-shadow:0 0 20px rgba(79,195,247,.2),inset 0 0 20px rgba(79,195,247,.05)}50%{box-shadow:0 0 40px rgba(79,195,247,.5),inset 0 0 30px rgba(79,195,247,.1)}}
+      .wm-dw{display:flex;justify-content:center;margin-bottom:12px}
+      .wm-d{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#1e3a5f 0%,#0d1b2a 100%);border:2px solid #2d6a9f;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .5s}
+      .wm-df{border-color:#4fc3f7;animation:wm-fl 2s ease-in-out infinite}
+      .wm-di{font-size:1.3em;margin-bottom:3px}
+      .wm-fv{font-size:1.9em;font-weight:700;color:#4fc3f7;line-height:1.1}
+      .wm-fu{font-size:.6em;color:#78b8d4;margin-top:2px}
+      .wm-fs{font-size:.58em;letter-spacing:.1em;margin-top:5px;font-weight:700}
+      .wm-fson{color:#4fc3f7}
+      .wm-fsoff{color:#444}
+      .wm-tot{text-align:center;margin-bottom:12px;font-size:.8em;color:var(--secondary-text-color)}
+      .wm-tv{font-weight:600;color:var(--primary-text-color)}
+      .wm-st{display:flex;justify-content:space-around;border-top:1px solid rgba(120,120,120,.2);padding-top:10px}
+      .wm-s{text-align:center;flex:1;cursor:pointer}
+      .wm-sv{display:block;font-size:1em;font-weight:600}
+      .wm-sl{display:block;font-size:.65em;color:var(--secondary-text-color);margin-top:2px}
+      </style>
+      <div class="wm">
+        <div class="wm-hdr">
+          <span class="wm-ttl">💧 Water Meter</span>
+          <span class="wm-warn {{ 'wm-won' if has_faults else 'wm-woff' }}"
+            onclick="this.dispatchEvent(new CustomEvent('hass-more-info',{bubbles:true,composed:true,detail:{entityId:'sensor.garden_water_meter_faults'}}))">&#9888;</span>
+        </div>
+        <div class="wm-bdg">
+          <span class="wm-b {{ 'wm-ice' if ice_warning else 'wm-tnorm' }}"
+            onclick="this.dispatchEvent(new CustomEvent('hass-more-info',{bubbles:true,composed:true,detail:{entityId:'sensor.garden_water_meter_temperature'}}))">
+            {{ '❄ ' if ice_warning else '🌡 ' }}{{ temp_raw }}{{ temp_unit }}{{ ' — Ice Warning' if ice_warning else '' }}
+          </span>
+          <span class="wm-b {{ 'wm-vopen' if valve_open else 'wm-vclosed' }}"
+            onclick="this.dispatchEvent(new CustomEvent('hass-more-info',{bubbles:true,composed:true,detail:{entityId:'switch.garden_water_meter'}}))">
+            {{ '⬤ OPEN' if valve_open else '⬤ CLOSED' }}
+          </span>
+        </div>
+        <div class="wm-dw">
+          <div class="wm-d {{ 'wm-df' if is_flowing else '' }}"
+            onclick="this.dispatchEvent(new CustomEvent('hass-more-info',{bubbles:true,composed:true,detail:{entityId:'sensor.garden_water_meter_flow_rate'}}))">
+            <div class="wm-di">💧</div>
+            <div class="wm-fv">{{ flow_raw }}</div>
+            <div class="wm-fu">{{ flow_unit }}</div>
+            <div class="wm-fs {{ 'wm-fson' if is_flowing else 'wm-fsoff' }}">{{ 'FLOWING' if is_flowing else 'NO FLOW' }}</div>
+          </div>
+        </div>
+        <div class="wm-tot">Total consumed: <span class="wm-tv">{{ total }} {{ total_unit }}</span></div>
+        <div class="wm-st">
+          <div class="wm-s"
+            onclick="this.dispatchEvent(new CustomEvent('hass-more-info',{bubbles:true,composed:true,detail:{entityId:'sensor.garden_water_meter_daily_consumption'}}))">
+            <span class="wm-sv">{{ daily }}</span>
+            <span class="wm-sl">Today ({{ daily_unit }})</span>
+          </div>
+          <div class="wm-s"
+            onclick="history.pushState(null,'','/history?entity_id=sensor.garden_water_meter_month_consumption');window.dispatchEvent(new Event('location-changed'))"
+            title="View monthly history">
+            <span class="wm-sv">{{ monthly }}</span>
+            <span class="wm-sl">This month ({{ monthly_unit }})</span>
+          </div>
+        </div>
+      </div>
