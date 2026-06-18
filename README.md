@@ -2,7 +2,7 @@
 
 A styled Home Assistant dashboard card for the **Zemismart Water Valve & Meter** (zigbee water meter with built-in valve control). Displays live flow rate, temperature, valve status, consumption stats, and active fault warnings — all in a single circular instrument dial card.
 
-![Card preview showing circular dial, temperature badge, valve status, and stats](docs/preview.png)
+![Card preview showing circular dial, temperature badge, valve status, and stats](docs/card-preview.png)
 
 > **Designed for the Home Assistant My Home → Garden dashboard tab, but works on any Lovelace dashboard.**
 
