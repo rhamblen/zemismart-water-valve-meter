@@ -33,10 +33,18 @@ A styled Home Assistant dashboard card for the **Zemismart Water Valve & Meter**
 
 ## Quick install
 
+**Option A — Claude-assisted (recommended)**
+
+With Claude and the Home Assistant MCP connected, tell Claude:
+
+> "Help me install the Zemismart Water Valve & Meter card from https://github.com/rhamblen/zemismart-water-valve-meter — my entity prefix is `garden_water_meter`. Add it to my [dashboard name] dashboard."
+
+**Option B — Manual**
+
 1. Install `custom:html-template-card` via HACS
-2. Open your dashboard in edit mode → Add card → Manual card
-3. Paste the contents of [`releases/v1.0.0/card.yaml`](releases/v1.0.0/card.yaml)
-4. If your entity prefix differs from `garden_water_meter`, find-and-replace it throughout
+2. Download [`releases/v1.0.0/card.yaml`](releases/v1.0.0/card.yaml)
+3. If your entity prefix differs from `garden_water_meter`, find-and-replace it throughout
+4. Open your dashboard in edit mode → Add card → Manual card → paste the YAML → Save
 
 Full step-by-step guide: **[INSTALLATION.md](INSTALLATION.md)**
 
