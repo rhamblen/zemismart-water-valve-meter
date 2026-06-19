@@ -1,108 +1,91 @@
 # Installation Guide
 
-**Version:** 1.0.0  
-**Last updated:** 2026-06-18
+**Current version:** v1.0.0  
+**Repository:** https://github.com/rhamblen/zemismart-water-valve-meter
 
 ---
 
-## Step 1 — Install the required custom card
+## Choose your installation method
 
-This card requires **`custom:html-template-card`** by Piotr Machowski, installed via HACS.
+### Option A — Claude-assisted (recommended)
 
-1. Open Home Assistant → HACS → Frontend
-2. Search for **"HTML Template Card"**
-3. Install it and reload your browser
+No manual steps. Claude reads the repository and deploys the card for you.
 
-Direct link: [lovelace-html-template-card on GitHub](https://github.com/PiotrMachowski/lovelace-html-template-card)
+**What you need first:**
+- HACS installed in Home Assistant
+- `custom:html-template-card` installed via HACS → Frontend → search "HTML Template Card"
+- Claude with Home Assistant MCP connected
 
----
+**Then tell Claude:**
 
-## Step 2 — Confirm your entity IDs
+> "Help me install the Zemismart Water Valve & Meter card from https://github.com/rhamblen/zemismart-water-valve-meter — my entity prefix is `garden_water_meter`. Add it to my [dashboard name] dashboard."
 
-The card expects entities with the prefix `garden_water_meter`. Check your actual entity IDs in **Settings → Devices & Services → your water meter device**.
+Claude will:
+1. Read the card YAML from the repository
+2. Confirm your entity prefix matches what the card expects
+3. Deploy the card to your dashboard
 
-If your prefix differs (e.g. `water_meter_garden` or `front_tap_meter`), you will substitute it in Step 4.
-
-Required entities:
-
-| Entity | What it provides |
-|--------|-----------------|
-| `sensor.garden_water_meter_flow_rate` | Current flow rate (centre dial) |
-| `sensor.garden_water_meter_temperature` | Pipe temperature |
-| `switch.garden_water_meter` | Valve control |
-| `sensor.garden_water_meter_daily_consumption` | Today's usage |
-| `sensor.garden_water_meter_month_consumption` | This month's usage |
-| `sensor.garden_water_meter_water_consumed` | Cumulative total |
-| `sensor.garden_water_meter_faults` | Fault codes |
+Replace `garden_water_meter` with your actual prefix if it differs (see [Finding your entity prefix](#finding-your-entity-prefix) below).
 
 ---
 
-## Step 3 — Download the card YAML
+### Option B — Manual installation
 
-Download [`releases/v1.0.0/card.yaml`](releases/v1.0.0/card.yaml) from this repository.
+#### Prerequisites
 
-Or copy the raw YAML directly from that file.
-
----
-
-## Step 4 — Adapt entity IDs (if needed)
-
-If your entity prefix is not `garden_water_meter`, open `card.yaml` in a text editor and do a **find and replace**:
-
-- Find: `garden_water_meter`
-- Replace: `your_actual_prefix`
+| Requirement | How to get it |
+|-------------|--------------|
+| HACS | https://hacs.xyz |
+| `custom:html-template-card` | HACS → Frontend → search "HTML Template Card" |
+| Zemismart Water Meter | Paired via Zigbee2MQTT or ZHA |
 
 ---
 
-## Step 5 — Add the card to your dashboard
+#### Finding your entity prefix
 
-### Option A — Via the UI editor
+Go to **Settings → Devices & Services → your water meter device**. You will see entities like:
 
-1. Open your dashboard → Edit → Add card → **Manual card**
-2. Delete the placeholder YAML
-3. Paste the full contents of `card.yaml`
-4. Save
+| Entity | Example |
+|--------|---------|
+| `sensor.{prefix}_flow_rate` | `sensor.garden_water_meter_flow_rate` |
+| `switch.{prefix}` | `switch.garden_water_meter` |
+| `sensor.{prefix}_temperature` | `sensor.garden_water_meter_temperature` |
 
-### Option B — Via Claude (AI-assisted)
+Your prefix is everything before `_flow_rate` in the flow sensor name — e.g. `garden_water_meter`.
 
-Tell Claude:
-
-> "Add the garden water meter card to my [dashboard name] dashboard, [tab name] tab, after the [section name] section. Use entity prefix [your_prefix]. The card spec is at https://github.com/rhamblen/zemismart-water-valve-meter."
-
-Claude will need:
-- Access to your Home Assistant via the Home Assistant MCP
-- The `ha_config_get_dashboard` and `ha_config_set_dashboard` tools
-- Your dashboard url_path, view index, and target section index
-
-### Option C — Direct YAML edit (advanced)
-
-Add the following to your Lovelace `views[n].sections` list:
-
-```yaml
-- type: grid
-  background:
-    color: lightgray
-    opacity: 50
-  cards:
-    - type: heading
-      heading: Water Meter
-    - type: custom:html-template-card
-      ignore_line_breaks: true
-      content: >-
-        # paste content string from card.yaml here
-```
+> **Note:** This card requires no additional helpers or automations. The Zemismart device exposes all required sensors (flow rate, temperature, daily/monthly consumption, cumulative total, faults) natively.
 
 ---
 
-## Step 6 — Verify
+#### Step 1 — Download and adapt the card YAML
 
-Open your dashboard. The Water Meter card should show:
-- A circular dial with your current flow rate
-- Temperature in the top-left badge
-- Valve status (OPEN/CLOSED) in the top-right badge
-- Today and This month stats at the bottom
+1. Download [`releases/v1.0.0/card.yaml`](releases/v1.0.0/card.yaml) from this repository
+2. If your entity prefix is not `garden_water_meter`, open the file in a text editor and do a find-and-replace:
+   - Find: `garden_water_meter`
+   - Replace: `your_actual_prefix`
 
-If the card shows a red error, check that `custom:html-template-card` is installed and that your entity IDs are correct.
+---
+
+#### Step 2 — Add the card to your dashboard
+
+1. Open your Lovelace dashboard → click the pencil (edit) icon
+2. Click **+ Add card** in the target section
+3. Scroll to the bottom and choose **Manual card**
+4. Delete the placeholder YAML and paste the full contents of your adapted `card.yaml`
+5. Click **Save**
+
+---
+
+#### Step 3 — Verify
+
+The card should show:
+
+- **Circular dial** — live flow rate in the centre, pulsing blue glow when water is flowing
+- **Temperature badge** — pipe temperature; turns blue with ❄ ice warning at ≤ 4 °C
+- **Valve status badge** — 🟢 OPEN / 🔴 CLOSED; tap to toggle
+- **Fault warning light** — dim when clear, glowing amber ⚠ when faults are active
+- **Stats bar** — Today and This month (tappable for 24 h history graph)
+- **Total consumed** — cumulative odometer
 
 ---
 
@@ -110,23 +93,16 @@ If the card shows a red error, check that `custom:html-template-card` is install
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| Red "Custom element doesn't exist" error | html-template-card not installed | Install via HACS and reload |
-| All values show `unknown` | Entity IDs don't match | Check entity prefix in HA device page |
-| Fault light always amber | New device boot faults | These clear once the device sees water flow |
-| Monthly history is flat | Expected — monthly counter changes slowly | The This Month click opens HA History page where you can widen the time range to weeks/months |
-| Temperature badge always grey | Temp sensor unavailable | Check zigbee device connectivity |
+| "Custom element doesn't exist" error | `html-template-card` not installed | Install via HACS and reload browser |
+| All values show `unknown` or `unavailable` | Entity IDs don't match | Check the entity prefix — go to Settings → Devices → your meter |
+| Fault light always amber | Device boot faults | These clear once the device sees water flow |
+| Monthly history is flat | Expected — monthly counter changes slowly | Tap "This month" to open HA History; widen the time range to weeks/months |
+| Temperature badge always grey | Temp sensor unavailable | Check Zigbee2MQTT / ZHA device connectivity |
 
 ---
 
 ## Updating to a newer version
 
-When a new release is available:
-
-1. Download the new `card.yaml` from the relevant release folder
-2. In your dashboard editor, find the Water Meter card and click Edit
-3. Replace the `content:` value with the updated one
-4. Save
-
-Or ask Claude to do it:
-
-> "Update my garden water meter card to the latest version from https://github.com/rhamblen/zemismart-water-valve-meter"
+1. Download `releases/v{version}/card.yaml` from this repository
+2. Apply your entity prefix find-and-replace if needed
+3. Open your dashboard editor → find the Water Meter card → Edit → replace the content → Save
